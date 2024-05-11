@@ -50,7 +50,7 @@ def generate_imgs(data, labels, noise, img_shape):
 # %%
 
 train_path = "../data/train"
-noise=0
+noise=3
 for i in range(6000):
     final_img, final_label = generate_imgs(data_train, labels_train, noise, img_shape=(28, 28))
     im = Image.fromarray(final_img.astype(np.uint8))
@@ -65,46 +65,53 @@ for i in range(6000):
         im_name = str(noise) + '_'+ str(i) + '.jpg'
         im.save(tmp_path + "/" + im_name)
     else:
-        pass
+        tmp_path = train_path + "/same"
+        im_name = str(noise) + '_'+ str(i) + '.jpg'
+        im.save(tmp_path + "/" + im_name)
 
 
 
 val_path = "../data/validation"
-noise_val=0
-for i in range(4000):
-    final_img, final_label = generate_imgs(data_val, labels_val, noise, img_shape=(28, 28))
+noise_val=2
+for i in range(4500):
+    final_img, final_label = generate_imgs(data_val, labels_val, noise_val, img_shape=(28, 28))
     im = Image.fromarray(final_img.astype(np.uint8))
     if im.mode == "F":
         im = im.convert("RGB")
     if final_label == "even":
         tmp_path = val_path + "/even"
-        im_name = str(noise) + '_'+ str(i) + '.jpg'
+        im_name = str(noise_val) + '_'+ str(i) + '.jpg'
         im.save(tmp_path + "/" + im_name)
     elif final_label == "odd":
         tmp_path = val_path + "/odd"
-        im_name = str(noise) + '_'+ str(i) + '.jpg'
+        im_name = str(noise_val) + '_'+ str(i) + '.jpg'
         im.save(tmp_path + "/" + im_name)
     else:
         pass
+        tmp_path = val_path + "/same"
+        im_name = str(noise_val) + '_'+ str(i) + '.jpg'
+        im.save(tmp_path + "/" + im_name)
 
 
 
 test_path = "../data/test"
-noise_test=0
-for i in range(2000):
-    final_img, final_label = generate_imgs(data_test, labels_test, noise, img_shape=(28, 28))
+noise_test=1.5
+for i in range(3000):
+    final_img, final_label = generate_imgs(data_test, labels_test, noise_test, img_shape=(28, 28))
     im = Image.fromarray(final_img.astype(np.uint8))
     if im.mode == "F":
         im = im.convert("RGB")
     if final_label == "even":
         tmp_path = test_path + "/even"
-        im_name = str(noise) + '_'+ str(i) + '.jpg'
+        im_name = str(noise_test) + '_'+ str(i) + '.jpg'
         im.save(tmp_path + "/" + im_name)
     elif final_label == "odd":
         tmp_path = test_path + "/odd"
-        im_name = str(noise) + '_'+ str(i) + '.jpg'
+        im_name = str(noise_test) + '_'+ str(i) + '.jpg'
         im.save(tmp_path + "/" + im_name)
     else:
-        pass
+        tmp_path = test_path + "/same"
+        im_name = str(noise_test) + '_'+ str(i) + '.jpg'
+        im.save(tmp_path + "/" + im_name)
 # %%
 

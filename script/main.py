@@ -8,6 +8,7 @@ import random
 from Myloader import data_loader
 from Model import *
 from Training import *
+from utils import *
 
 
 
@@ -16,7 +17,7 @@ parser = argparse.ArgumentParser(description='')
 #---------------------------------------------------前处理参数---------------------------------------------------
 parser.add_argument('--seed',dest='seed', type=int, default=1, help='Seed')
 parser.add_argument('--batch', dest='batch', type=int, default=64, help='# images in batch')
-parser.add_argument('--nepoch', dest='nepoch', type=int, default=30, help='# of epoch')
+parser.add_argument('--nepoch', dest='nepoch', type=int, default=100, help='# of epoch')
 
 
 args = parser.parse_args()
@@ -39,10 +40,12 @@ if __name__ == '__main__':
     train_image_dir = './data/train/'
     val_image_dir = './data/validation/'
     test_image_dir = './data/test/'
+
+    custom_class_to_idx = {'even': 0, 'odd': 1, 'same': 0.5}
     #读取数据集
-    train_dataloader, num_train = data_loader(train_image_dir, args.batch, drop_last=False, shuffle=True)
-    val_dataloader, num_val = data_loader(val_image_dir, args.batch, drop_last=False, shuffle=True)
-    test_dataloader, num_test = data_loader(test_image_dir, args.batch, drop_last=False, shuffle=False)
+    train_dataloader, num_train = data_loader(custom_class_to_idx, train_image_dir, args.batch, drop_last=False, shuffle=True)
+    val_dataloader, num_val = data_loader(custom_class_to_idx, val_image_dir, args.batch, drop_last=False, shuffle=True)
+    test_dataloader, num_test = data_loader(custom_class_to_idx,test_image_dir, args.batch, drop_last=False, shuffle=False)
     #打印数据集大小
     print('train dataset size：', num_train, 'validatin dataset size：', num_val, 'test dataset size：', num_test)
 
@@ -57,7 +60,7 @@ if __name__ == '__main__':
 
 train_loss, val_loss, val_acc, val_roc, model = model_training(epochs=args.nepoch, model=model, train_loader=train_dataloader, 
                                                                val_loader=val_dataloader, optimizer=optimizer, 
-                                                               device=device, loss_fun=F.binary_cross_entropy_with_logits)
+                                                               device=device, loss_fun=nn.CrossEntropyLoss())
 
 #torch.save(model.state_dict(), './model/model.pt')
 

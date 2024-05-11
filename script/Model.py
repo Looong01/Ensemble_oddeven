@@ -98,7 +98,7 @@ class MyResNet(nn.Module):
                 nn.Linear(64, 256),
                 nn.ReLU(inplace=True),
                 nn.Dropout(dropout_prob),  # 在全连接层前应用 Dropout
-                nn.Linear(256, 1),
+                nn.Linear(256, 3),
             )
 
     def forward(self, x):
