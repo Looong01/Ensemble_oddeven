@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 def classify_sigmoid_output(preds):
     # 处理张量输入
@@ -11,7 +12,15 @@ def classify_sigmoid_output(preds):
     return result
 
 
-def target_to_oh(target):
-    NUM_CLASS = 3  # hard code here, can do partial
+def target_to_oh(target, class_num = 3):
+    NUM_CLASS = class_num  # hard code here, can do partial
     one_hot = torch.eye(NUM_CLASS)[target]
     return one_hot
+
+def dense_to_one_hot(labels_dense, num_classes):
+    """Convert class labels from scalars to one-hot vectors."""
+    num_labels = labels_dense.shape[0]
+    index_offset = np.arange(num_labels) * num_classes
+    labels_one_hot = np.zeros((num_labels, num_classes))
+    labels_one_hot.flat[index_offset+labels_dense.ravel()] = 1
+    return labels_one_hot
