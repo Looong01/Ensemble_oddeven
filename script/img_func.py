@@ -50,7 +50,7 @@ def generate_imgs(data, labels, noise, img_shape):
 # %%
 
 train_path = "../data/train"
-noise=3
+noise=0
 for i in range(6000):
     final_img, final_label = generate_imgs(data_train, labels_train, noise, img_shape=(28, 28))
     im = Image.fromarray(final_img.astype(np.uint8))
@@ -72,7 +72,7 @@ for i in range(6000):
 
 
 val_path = "../data/validation"
-noise_val=2
+noise_val=0
 for i in range(4500):
     final_img, final_label = generate_imgs(data_val, labels_val, noise_val, img_shape=(28, 28))
     im = Image.fromarray(final_img.astype(np.uint8))
@@ -95,7 +95,7 @@ for i in range(4500):
 
 
 test_path = "../data/test"
-noise_test=1.5
+noise_test=0
 for i in range(3000):
     final_img, final_label = generate_imgs(data_test, labels_test, noise_test, img_shape=(28, 28))
     im = Image.fromarray(final_img.astype(np.uint8))

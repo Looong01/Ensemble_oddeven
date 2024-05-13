@@ -21,6 +21,13 @@ def data_loader(image_dir, batch_size, drop_last=False, shuffle=True):
 
 
 
+import os
+import random
+import numpy as np
+from torchvision import transforms
+from PIL import Image
+from torch.utils.data import Dataset
+
 class CustomDataset(Dataset):
     def __init__(self, root_dir, transform=None):
         self.root_dir = root_dir
@@ -62,17 +69,12 @@ class CustomDataset(Dataset):
 
         # Create labels
         category_label = 0 if info_category == "odd" else 1  # 0: odd, 1: even
-        info_label = 1 if category_label == 0 or category_label == 1 else 0  # 0: noninfo (same), 1: info (odd/even)
 
         # Randomly choose the order of images
         idx_info = np.random.randint(0, 2)
         images_all = [info_category_image, same_image] if idx_info == 0 else [same_image, info_category_image]
         category_label = [category_label, 2] if idx_info == 0 else [2, category_label]
+        info_label = [1, 0] if idx_info == 0 else [0, 1]
 
-        return images_all, category_label, info_label, idx_info
-    """
-    图片的一共有两个，idx_info与列表的图片顺序对应，idx_info为1则是same放在前面，odd/even在后面
-    idx为0就informative放在前面，为1就放在后面
-    图片也是一样的
-    
-    """
+        return [images_all[0], images_all[1]], category_label, info_label, idx_info
+
