@@ -56,6 +56,8 @@ class CustomDataset(Dataset):
         # Select a same image
         same_image_path = random.choice(self.image_paths['same'])
 
+        even_num_info = int(info_category_image_path.split('/')[-1].split('_')[0])  # 解析文件路径获取even_num
+        even_num_same = int(same_image_path.split('/')[-1].split('_')[0])  # 解析文件路径获取even_num
         # Read images
         info_category_image = Image.open(info_category_image_path).convert("RGB")
         same_image = Image.open(same_image_path).convert("RGB")
@@ -75,6 +77,7 @@ class CustomDataset(Dataset):
         images_all = [info_category_image, same_image] if idx_info == 0 else [same_image, info_category_image]
         category_label = [category_label, 0.5] if idx_info == 0 else [0.5, category_label]# 0.5 for same label
         info_label = [1, 0] if idx_info == 0 else [0, 1]
+        even_num = [even_num_info, even_num_same] if idx_info == 0 else [even_num_same, even_num_info]
 
-        return [images_all[0], images_all[1]], category_label, info_label, idx_info
+        return [images_all[0], images_all[1]], category_label, info_label, idx_info, even_num
 
