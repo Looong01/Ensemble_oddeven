@@ -73,7 +73,7 @@ class CustomDataset(Dataset):
         # Randomly choose the order of images
         idx_info = np.random.randint(0, 2)
         images_all = [info_category_image, same_image] if idx_info == 0 else [same_image, info_category_image]
-        category_label = [category_label, 2] if idx_info == 0 else [2, category_label]
+        category_label = [category_label, 0.5] if idx_info == 0 else [0.5, category_label]# 0.5 for same label
         info_label = [1, 0] if idx_info == 0 else [0, 1]
 
         return [images_all[0], images_all[1]], category_label, info_label, idx_info
