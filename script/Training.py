@@ -140,3 +140,90 @@ def model_training(epochs, model, train_loader, val_loader, optimizer, device):
         print(f"Epoch [{epochi+1}/{epochs}], Train Loss: {train_loss[epochi]:.4f}, Val Loss: {val_loss[epochi]:.4f}, Val Acc: {val_acc[epochi]:.4f}, Val ROC AUC: {val_roc[epochi]:.4f}")
 
     return train_loss, val_loss, val_acc, val_roc, model
+
+
+
+
+def train_epoch_meta(epoch, model, train_loader, optimizer,device):
+    model.train()
+    num_iter = len(train_loader)
+    trainloss = 0
+    for i, (images_all, category_label, info_label, idx_info, even_num) in enumerate(train_loader):
+        #传入cuda中
+        data1, data2, label1, label2, label3 = images_all[0].to(device), images_all[1].to(device), category_label[0].to(device), category_label[1].to(device), info_label.to(device)
+
+        optimizer.zero_grad()
+
+        label_pred1 = model(data1).squeeze()
+        label_pred2 = model(data2).squeeze()
+        #二分类损伤函数F.binary_cross_entropy_with_logits
+        loss1 = F.binary_cross_entropy_with_logits(label_pred1, label1.float())
+
+        loss2 = F.binary_cross_entropy_with_logits(label_pred2, label2.float())
+
+        loss = loss1 + loss2
+        loss.backward()
+        optimizer.step()
+        trainloss += loss
+    trainloss = trainloss/num_iter
+    return trainloss
+
+
+def val_epoch_meta(model, val_loader, device):
+    model.train()
+    num_iter = len(val_loader)
+    valloss = 0
+    all_labels1 = []
+    all_preds1 = []
+    all_pred_proba1 = []
+    all_labels1_int = []
+    
+    all_labels2 = []
+    all_preds2 = []
+    all_pred_proba2 = []
+    all_labels2_int = []
+
+
+    model.eval()
+    for i, (images_all, category_label, info_label, idx_info, even_num) in enumerate(val_loader):
+        # 传入cuda中
+        data1, data2, label1, label2, label3 = images_all[0].to(device), images_all[1].to(device), category_label[0].to(device), category_label[1].to(device), info_label.to(device)
+        with torch.no_grad():
+            label_pred1 = model(data1).squeeze()
+            label_pred2 = model(data2).squeeze()
+            #二分类损伤函数F.binary_cross_entropy_with_logits
+            loss1 = F.binary_cross_entropy_with_logits(label_pred1, label1.float())
+
+            loss2 = F.binary_cross_entropy_with_logits(label_pred2, label2.float())
+
+            loss = loss1 + loss2
+            #acc
+            valloss += loss
+            #acc
+            label1_int = classify_sigmoid_output(label1)
+            preds_prob1 = torch.sigmoid(label_pred1)
+            preds1 = classify_sigmoid_output(preds_prob1)
+            all_labels1.extend(label1.cpu().numpy())
+            all_preds1.extend(preds1.cpu().numpy())
+            all_pred_proba1.extend(preds_prob1.cpu().numpy())
+            all_labels1_int.extend(label1_int.cpu().numpy())
+
+            label2_int = classify_sigmoid_output(label2)
+            preds_prob2 = torch.sigmoid(label_pred2)
+            preds2 = classify_sigmoid_output(preds_prob2)
+            all_labels2.extend(label2.cpu().numpy())
+            all_preds2.extend(preds2.cpu().numpy())
+            all_pred_proba2.extend(preds_prob2.cpu().numpy())
+            all_labels2_int.extend(label2_int.cpu().numpy())
+
+
+    acc1 = accuracy_score(all_labels1_int, all_preds1)
+    label1_oh = dense_to_one_hot(np.array(all_labels1_int), 3)
+    pred1_oh = dense_to_one_hot(np.array(all_preds1),3)
+    roc1  = roc_auc_score(label1_oh, pred1_oh)
+    acc2 = accuracy_score(all_labels2_int, all_preds2)
+    label2_oh = dense_to_one_hot(np.array(all_labels2_int),3)
+    pred2_oh = dense_to_one_hot(np.array(all_preds2),3)
+    roc2  = roc_auc_score(label2_oh, pred2_oh)
+    valloss = valloss / num_iter
+    return valloss, acc1, roc1, acc2, roc2

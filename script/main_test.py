@@ -41,16 +41,23 @@ if __name__ == '__main__':
     val_image_dir = './data/validation/'
     test_image_dir = './data/test/'
 
+    transform = transforms.Compose([
+    transforms.ToPILImage(),
+    transforms.Grayscale(num_output_channels=1),
+    transforms.ToTensor()])
 
-    #读取数据集
-    train_dataloader, num_train = data_loader(train_image_dir, args.batch, drop_last=False, shuffle=True)
-    val_dataloader, num_val = data_loader(val_image_dir, args.batch, drop_last=False, shuffle=True)
-    test_dataloader, num_test = data_loader(test_image_dir, args.batch, drop_last=False, shuffle=False)
-    #打印数据集大小
-    print('train dataset size：', num_train, 'validatin dataset size：', num_val, 'test dataset size：', num_test)
+    test_dataset = CustomDataset(test_image_dir, transform=transform)
+    test_data_loader = DataLoader(test_dataset, args.batch, shuffle=False)
+    train_dataset = CustomDataset(train_image_dir, transform=transform)
+    train_data_loader = DataLoader(train_dataset, args.batch, shuffle=False)
+    val_dataset = CustomDataset(val_image_dir, transform=transform)
+    val_data_loader = DataLoader(val_dataset, args.batch, shuffle=False)
+
+
+
 
     #导入模型
-    model = MyResNet(dropout_prob=0.5).to(device)
+    model = CNN().to(device)
     #优化器
     optimizer = {
         'adam': torch.optim.Adam(model.parameters(), 1e-4, betas = (0.9, 0.999)),
@@ -58,8 +65,15 @@ if __name__ == '__main__':
     }['adam']
 
 
-    train_loss, val_loss, val_acc, val_roc, model = model_training(epochs=args.nepoch, model=model, train_loader=train_dataloader,
-                                                               val_loader=test_dataloader, optimizer=optimizer, device=device)
+    for epoch in range(args.nepoch):
+        #训练
+        trainloss = train_epoch_meta(epoch, model, train_data_loader, optimizer,device)
+        print('----------------------------------------------------------------------------------')
+        print('Epoch: {}/{} || train Loss: {:.4}'.format(epoch + 1, args.nepoch, trainloss))
+        #验证
+        valloss, acc1, roc1, acc2, roc2 = val_epoch_meta(model, val_data_loader, device)
+        print('Epoch: {}/{} || val Loss: {:.4} || acc1: {:.4} || roc1: {:.4} || acc2: {:.4} || roc2: {:.4}'.format(epoch + 1, args.nepoch, valloss, acc1, roc1, acc2, roc2))
+
 
 #torch.save(model.state_dict(), './model/model.pt')
 
