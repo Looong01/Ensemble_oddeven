@@ -57,22 +57,26 @@ if __name__ == '__main__':
 
 
     #导入模型
-    model = CNN().to(device)
+    model1 = CNN().to(device)
+    model2 = Confidence(6, 1).to(device)
+    all_modules = nn.ModuleList([model1, model2])
     #优化器
     optimizer = {
-        'adam': torch.optim.Adam(model.parameters(), 1e-4, betas = (0.9, 0.999)),
-        'sgd': torch.optim.SGD(model.parameters(), 1e-4, momentum=0.9, nesterov=True, weight_decay=1e-4)
+        'adam': torch.optim.Adam(all_modules.parameters(), 1e-4, betas = (0.9, 0.999)),
+        'sgd': torch.optim.SGD(all_modules.parameters(), 1e-4, momentum=0.9, nesterov=True, weight_decay=1e-4)
     }['adam']
+
+
 
 
     for epoch in range(args.nepoch):
         #训练
-        trainloss = train_epoch_meta(epoch, model, train_data_loader, optimizer,device)
+        trainloss = train_epoch_meta(epoch, model1, model2, train_data_loader, optimizer,  device)
         print('----------------------------------------------------------------------------------')
         print('Epoch: {}/{} || train Loss: {:.4}'.format(epoch + 1, args.nepoch, trainloss))
         #验证
-        valloss, acc1, roc1, acc2, roc2 = val_epoch_meta(model, val_data_loader, device)
-        print('Epoch: {}/{} || val Loss: {:.4} || acc1: {:.4} || roc1: {:.4} || acc2: {:.4} || roc2: {:.4}'.format(epoch + 1, args.nepoch, valloss, acc1, roc1, acc2, roc2))
+        valloss, acc1, roc1, acc2, roc2, acc3, roc3 = val_epoch_meta(model1, model2, train_data_loader, device)
+        print('Epoch: {}/{} || val Loss: {:.4} || acc1: {:.3} || roc1: {:.3} || acc2: {:.3} || roc2: {:.3}|| acc3: {:.3} || roc3: {:.3}'.format(epoch + 1, args.nepoch, valloss, acc1, roc1, acc2, roc2, acc3, roc3))
 
 
 #torch.save(model.state_dict(), './model/model.pt')

@@ -38,7 +38,7 @@ class CNN(nn.Module):
             self.classifier = nn.Sequential(
                 nn.Flatten(),
                 nn.Linear(64 * 7 * 7, 256),
-                nn.Linear(256, 1),
+                nn.Linear(256, 3),
             )
 
     def forward(self, x):
@@ -105,4 +105,15 @@ class MyResNet(nn.Module):
         x = self.features(x)
         if self.classifier is not None:
             x = self.classifier(x)
+        return x
+    
+
+
+class Confidence(nn.Module):
+    def __init__(self, input_size, outpt_size):
+        super(Confidence, self).__init__()
+        self.fc1 = nn.Linear(input_size, outpt_size)
+
+    def forward(self, x):
+        x = self.fc1(x)
         return x

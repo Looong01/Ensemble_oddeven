@@ -144,8 +144,9 @@ def model_training(epochs, model, train_loader, val_loader, optimizer, device):
 
 
 
-def train_epoch_meta(epoch, model, train_loader, optimizer,device):
-    model.train()
+def train_epoch_meta(epoch, model1, model2, train_loader, optimizer, device):
+    model1.train()
+    model2.train()
     num_iter = len(train_loader)
     trainloss = 0
     for i, (images_all, category_label, info_label, idx_info, even_num) in enumerate(train_loader):
@@ -154,14 +155,19 @@ def train_epoch_meta(epoch, model, train_loader, optimizer,device):
 
         optimizer.zero_grad()
 
-        label_pred1 = model(data1).squeeze()
-        label_pred2 = model(data2).squeeze()
+        label_pred1 = model1(data1)
+        label_pred2 = model1(data2)
+        combined_output = torch.cat((label_pred1, label_pred2), dim=1)
+        label_pred3 = model2(combined_output).squeeze()
         #二分类损伤函数F.binary_cross_entropy_with_logits
-        loss1 = F.binary_cross_entropy_with_logits(label_pred1, label1.float())
+        loss1 = F.cross_entropy(label_pred1, label1.long())
 
-        loss2 = F.binary_cross_entropy_with_logits(label_pred2, label2.float())
+        loss2 = F.cross_entropy(label_pred2, label2.long())
 
-        loss = loss1 + loss2
+        loss3 = F.binary_cross_entropy_with_logits(label_pred3, label3.float())
+
+        img_loss = (loss1 + loss2)/2.0
+        loss = img_loss + loss3
         loss.backward()
         optimizer.step()
         trainloss += loss
@@ -169,61 +175,84 @@ def train_epoch_meta(epoch, model, train_loader, optimizer,device):
     return trainloss
 
 
-def val_epoch_meta(model, val_loader, device):
-    model.train()
+def val_epoch_meta(model1, model2, val_loader, device):
+    model1.train()
+    model2.train()
     num_iter = len(val_loader)
     valloss = 0
+
     all_labels1 = []
     all_preds1 = []
-    all_pred_proba1 = []
-    all_labels1_int = []
     
     all_labels2 = []
     all_preds2 = []
-    all_pred_proba2 = []
-    all_labels2_int = []
+
+    all_labels3 = []
+    all_preds3 = []
+    all_preds3_sig = []
 
 
-    model.eval()
+
+    model1.eval()
+    model2.eval()
     for i, (images_all, category_label, info_label, idx_info, even_num) in enumerate(val_loader):
         # 传入cuda中
         data1, data2, label1, label2, label3 = images_all[0].to(device), images_all[1].to(device), category_label[0].to(device), category_label[1].to(device), info_label.to(device)
         with torch.no_grad():
-            label_pred1 = model(data1).squeeze()
-            label_pred2 = model(data2).squeeze()
+            label_pred1 = model1(data1)
+            label_pred2 = model1(data2)
+            combined_output = torch.cat((label_pred1, label_pred2), dim=1)
+            label_pred3 = model2(combined_output).squeeze()
+            label_pred3_sig = torch.sigmoid(label_pred3)
+
+
             #二分类损伤函数F.binary_cross_entropy_with_logits
-            loss1 = F.binary_cross_entropy_with_logits(label_pred1, label1.float())
+            loss1 = F.cross_entropy(label_pred1, label1.long())
 
-            loss2 = F.binary_cross_entropy_with_logits(label_pred2, label2.float())
+            loss2 = F.cross_entropy(label_pred2, label2.long())
 
-            loss = loss1 + loss2
+            loss3 = F.binary_cross_entropy_with_logits(label_pred3, label3.float())
+
+            img_loss = (loss1 + loss2)/2.0
+            loss = img_loss + loss3
             #acc
             valloss += loss
             #acc
-            label1_int = classify_sigmoid_output(label1)
-            preds_prob1 = torch.sigmoid(label_pred1)
-            preds1 = classify_sigmoid_output(preds_prob1)
-            all_labels1.extend(label1.cpu().numpy())
-            all_preds1.extend(preds1.cpu().numpy())
-            all_pred_proba1.extend(preds_prob1.cpu().numpy())
-            all_labels1_int.extend(label1_int.cpu().numpy())
+            
+            all_labels1.extend(label1.cpu().numpy())#
+            all_preds1.extend(label_pred1.cpu().numpy())
 
-            label2_int = classify_sigmoid_output(label2)
-            preds_prob2 = torch.sigmoid(label_pred2)
-            preds2 = classify_sigmoid_output(preds_prob2)
+
             all_labels2.extend(label2.cpu().numpy())
-            all_preds2.extend(preds2.cpu().numpy())
-            all_pred_proba2.extend(preds_prob2.cpu().numpy())
-            all_labels2_int.extend(label2_int.cpu().numpy())
+            all_preds2.extend(label_pred2.cpu().numpy())
+
+            all_labels3.extend(label3.cpu().numpy())
+            all_preds3.extend(label_pred3.cpu().numpy())
+            all_preds3_sig.extend(label_pred3_sig.cpu().numpy())
 
 
-    acc1 = accuracy_score(all_labels1_int, all_preds1)
-    label1_oh = dense_to_one_hot(np.array(all_labels1_int), 3)
-    pred1_oh = dense_to_one_hot(np.array(all_preds1),3)
-    roc1  = roc_auc_score(label1_oh, pred1_oh)
-    acc2 = accuracy_score(all_labels2_int, all_preds2)
-    label2_oh = dense_to_one_hot(np.array(all_labels2_int),3)
-    pred2_oh = dense_to_one_hot(np.array(all_preds2),3)
-    roc2  = roc_auc_score(label2_oh, pred2_oh)
+    all_batch_labels1 = np.array(all_labels1)
+    all_batch_labels2 = np.array(all_labels2)
+    all_batch_labels3 = np.array(all_labels3)
+
+    all_batch_preds1 = np.array(all_preds1)
+    all_batch_preds2 = np.array(all_preds2)
+    all_preds3_sig = np.array(all_preds3_sig)
+
+    val_preds_idx1 = np.argmax(all_batch_preds1, axis=1)
+    val_preds_idx2 = np.argmax(all_batch_preds2, axis=1)
+    val_preds_idx3 = (all_preds3_sig > 0.5).astype(float)
+
+    val_label_onehot1 = dense_to_one_hot(all_batch_labels1, 3)
+    val_label_onehot2 = dense_to_one_hot(all_batch_labels2, 3)
+    
+    acc1 = accuracy_score(all_batch_labels1, val_preds_idx1)
+    roc1  = roc_auc_score(val_label_onehot1, all_batch_preds1, multi_class="ovr", average="macro")
+   
+    acc2 = accuracy_score(all_batch_labels2, val_preds_idx2)
+    roc2  = roc_auc_score(val_label_onehot2, all_batch_preds2, multi_class="ovr", average="macro")
+
+    acc3 = accuracy_score(all_batch_labels3, val_preds_idx3)
+    roc3  = roc_auc_score(all_batch_labels3, val_preds_idx3)
     valloss = valloss / num_iter
-    return valloss, acc1, roc1, acc2, roc2
+    return valloss, acc1, roc1, acc2, roc2, acc3, roc3
