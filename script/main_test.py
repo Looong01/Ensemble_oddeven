@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser(description='')
 #---------------------------------------------------前处理参数---------------------------------------------------
 parser.add_argument('--seed',dest='seed', type=int, default=114514, help='Seed')
 parser.add_argument('--batch', dest='batch', type=int, default=32, help='# images in batch')
-parser.add_argument('--nepoch', dest='nepoch', type=int, default=100, help='# of epoch')
+parser.add_argument('--nepoch', dest='nepoch', type=int, default=300, help='# of epoch')
 
 
 args = parser.parse_args()
@@ -44,13 +44,18 @@ if __name__ == '__main__':
     transform = transforms.Compose([
     transforms.ToPILImage(),
     transforms.Grayscale(num_output_channels=1),
+    transforms.ToTensor(), 
+     AddGaussianNoise(0., 1.2)])
+    transform_test = transforms.Compose([
+    transforms.ToPILImage(),
+    transforms.Grayscale(num_output_channels=1),
     transforms.ToTensor()])
 
-    test_dataset = CustomDataset(test_image_dir, transform=transform)
+    test_dataset = CustomDataset(test_image_dir, transform=transform_test)
     test_data_loader = DataLoader(test_dataset, args.batch, shuffle=False)
     train_dataset = CustomDataset(train_image_dir, transform=transform)
     train_data_loader = DataLoader(train_dataset, args.batch, shuffle=False)
-    val_dataset = CustomDataset(val_image_dir, transform=transform)
+    val_dataset = CustomDataset(val_image_dir, transform=transform_test)
     val_data_loader = DataLoader(val_dataset, args.batch, shuffle=False)
 
 
@@ -72,11 +77,14 @@ if __name__ == '__main__':
     for epoch in range(args.nepoch):
         #训练
         trainloss = train_epoch_meta(epoch, model1, model2, train_data_loader, optimizer,  device)
-        print('----------------------------------------------------------------------------------')
+        print('--------------------------------------------------------------------------------------------------------------------------')
         print('Epoch: {}/{} || train Loss: {:.4}'.format(epoch + 1, args.nepoch, trainloss))
         #验证
-        valloss, acc1, roc1, acc2, roc2, acc3, roc3 = val_epoch_meta(model1, model2, train_data_loader, device)
+        valloss, acc1, roc1, acc2, roc2, acc3, roc3 = val_epoch_meta(model1, model2, val_data_loader, device)
         print('Epoch: {}/{} || val Loss: {:.4} || acc1: {:.3} || roc1: {:.3} || acc2: {:.3} || roc2: {:.3}|| acc3: {:.3} || roc3: {:.3}'.format(epoch + 1, args.nepoch, valloss, acc1, roc1, acc2, roc2, acc3, roc3))
+        if epoch+1 == args.nepoch:
+            torch.save(model1.state_dict(), './model/classifier.pt')
+            torch.save(model2.state_dict(), './model/meta.pt')
 
 
 #torch.save(model.state_dict(), './model/model.pt')

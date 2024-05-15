@@ -7,28 +7,7 @@ from torchvision import transforms,datasets
 from torch.utils.data import DataLoader, Dataset,TensorDataset
 from utils import *
 
-def data_loader(image_dir, batch_size, drop_last=False, shuffle=True):
-
-    transform = transforms.Compose([
-        transforms.Grayscale(num_output_channels=1),
-        transforms.ToTensor()])
-    data = datasets.ImageFolder(image_dir, transform=transform)
-    # 创建数据加载器
-    loader = DataLoader(data, batch_size=batch_size, shuffle=shuffle, drop_last=drop_last)
-    num_data = len(data)
-    
-    return loader, num_data
-
-
-
-import os
-import random
-import numpy as np
-from torchvision import transforms
-from PIL import Image
-from torch.utils.data import Dataset
-
-class CustomDataset(Dataset):
+class Ensemble_dataset(Dataset):
     def __init__(self, root_dir, transform=None):
         self.root_dir = root_dir
         self.transform = transform
@@ -44,6 +23,8 @@ class CustomDataset(Dataset):
             for filename in os.listdir(cls_path):
                 if filename.endswith('.jpg') or filename.endswith('.png'):
                     self.image_paths[cls].append(os.path.join(cls_path, filename))
+
+        
 
     def __len__(self):
         return min(len(self.image_paths['same']), len(self.image_paths['odd']), len(self.image_paths['even']))
@@ -83,4 +64,20 @@ class CustomDataset(Dataset):
         file_name = [file_name1, file_name2] if idx_info == 0 else [file_name2, file_name1]
 
         return [images_all[0], images_all[1]], category_label, info_label, idx_info, even_num, file_name
+    
+# %%
+root_dir = "/Users/zhengyuanrui/Ensemble_oddeven/data/subtest"
+def initialize_dataset(root_dir):
+    classes = ['same', 'odd', 'even']
+    num_classes = len(classes)
+    image_paths = {cls: [] for cls in classes}
 
+    # Populate the image paths list
+    for cls in classes:
+        cls_path = os.path.join(root_dir, cls)
+        for filename in os.listdir(cls_path):
+            if filename.endswith('.jpg') or filename.endswith('.png'):
+                image_paths[cls].append(os.path.join(cls_path, filename))
+
+    return classes, num_classes, image_paths
+# %%

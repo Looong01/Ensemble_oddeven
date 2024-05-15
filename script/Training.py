@@ -149,7 +149,7 @@ def train_epoch_meta(epoch, model1, model2, train_loader, optimizer, device):
     model2.train()
     num_iter = len(train_loader)
     trainloss = 0
-    for i, (images_all, category_label, info_label, idx_info, even_num) in enumerate(train_loader):
+    for i, (images_all, category_label, info_label, idx_info, even_num, _) in enumerate(train_loader):
         #传入cuda中
         data1, data2, label1, label2, label3 = images_all[0].to(device), images_all[1].to(device), category_label[0].to(device), category_label[1].to(device), info_label.to(device)
 
@@ -195,7 +195,7 @@ def val_epoch_meta(model1, model2, val_loader, device):
 
     model1.eval()
     model2.eval()
-    for i, (images_all, category_label, info_label, idx_info, even_num) in enumerate(val_loader):
+    for i, (images_all, category_label, info_label, idx_info, even_num, _) in enumerate(val_loader):
         # 传入cuda中
         data1, data2, label1, label2, label3 = images_all[0].to(device), images_all[1].to(device), category_label[0].to(device), category_label[1].to(device), info_label.to(device)
         with torch.no_grad():
