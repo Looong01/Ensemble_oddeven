@@ -57,34 +57,12 @@ class AddGaussianNoise(object):
     def __repr__(self):
         return self.__class__.__name__ + '(mean={0}, std={1})'.format(self.mean, self.std)
 
-def show_images_labels(images_all, category_label, info_label, idx_info, even_num):
-    for i in range(len(idx_info)):
+def show_images_labels(img1, img2, img1_label, img2_label, meta_label):
+    for i in range(img1.shape[0]):
         fig, axs = plt.subplots(1, 2, figsize=(4, 2))  # 创建包含两个子图的图形窗口
-        
-        if idx_info[i] == 0:
-            img_inf = images_all[0][i].permute(1, 2, 0).numpy()
-            img_non = images_all[1][i].permute(1, 2, 0).numpy()
-            label_inf = category_label[0][i]
-            label_non = category_label[1][i]
-            info_even_num = even_num[0][i]
-            non_even_num = even_num[1][i]
-        else:
-            img_inf = images_all[1][i].permute(1, 2, 0).numpy()
-            img_non = images_all[0][i].permute(1, 2, 0).numpy()
-            label_inf = category_label[1][i]
-            label_non = category_label[0][i]
-            info_even_num = even_num[1][i]
-            non_even_num = even_num[0][i]
-        info_label_idx = info_label[i]
-        
-        axs[0 if idx_info[i] == 0 else 1].imshow(img_inf, cmap='gray')  # 使用灰度色彩映射显示信息图像
-        axs[0 if idx_info[i] == 0 else 1].set_title(f"Informative\nCategory: {label_inf}, Meta: {info_label_idx}\nEven_n:{info_even_num}")
-        axs[0 if idx_info[i] == 0 else 1].axis('off')
+        axs[0].imshow(img1[i].squeeze(), cmap='gray')
+        axs[0].set_title(f"Category:{int(img1_label[i])}")
+        axs[1].imshow(img2[i].squeeze(), cmap='gray')
+        axs[1].set_title(f"Category:{int(img2_label[i])}")
 
-        axs[1 if idx_info[i] == 0 else 0].imshow(img_non, cmap='gray')  # 使用灰度色彩映射显示非信息图像
-        axs[1 if idx_info[i] == 0 else 0].set_title(f"Non-informative\nCategory: {label_non}, Meta: {info_label_idx}\nEven_n:{non_even_num}")
-        axs[1 if idx_info[i] == 0 else 0].axis('off')
-
-        plt.tight_layout()  # 调整子图之间的间距
-        # 如果是第一个试验，则保存图像
-        plt.show()
+        fig.suptitle(f"Meta: {int(meta_label[i])}")  # 在两个子图中间添加标题
