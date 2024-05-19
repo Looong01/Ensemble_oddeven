@@ -61,6 +61,7 @@ class ConfidenceModel(nn.Module):
         self.classifier = nn.Sequential(
             nn.Flatten(),
             nn.Linear(64 * 2 * 1 * 1, 256),
+            nn.Linear(256, 256),
             nn.Linear(256, 1),
         )
 
