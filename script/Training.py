@@ -75,7 +75,6 @@ def train_epoch_meta(epoch, model1, model2, model3, train_loader, optimizer,devi
         feature1 = feature1.view(feature1.size(0), -1)
         feature2 = feature2.view(feature2.size(0), -1)
 
-        print(feature1.shape)
         # combine_features = torch.cat((feature1, feature2), dim=1)#to model 3
 
 
