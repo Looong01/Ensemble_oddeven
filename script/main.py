@@ -64,7 +64,7 @@ if __name__ == '__main__':
     #导入模型
     model1 = hidden_layer().to(device)
     model2 = DecisionModel().to(device)
-    model3 = ConfidenceModel().to(device)
+    model3 = ConfidenceSeqModel().to(device)
     all_modules = nn.ModuleList([model1, model2, model3])
     #优化器
     optimizer = {

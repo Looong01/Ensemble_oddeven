@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 
 class ConvBN2d(nn.Module):
@@ -68,3 +69,18 @@ class ConfidenceModel(nn.Module):
     def forward(self, x):
         x = self.classifier(x)
         return x
+    
+    
+
+class ConfidenceSeqModel(nn.Module):
+    def __init__(self):
+        super(ConfidenceSeqModel, self).__init__()
+        self.rnn = nn.RNN(64, 256, 3, batch_first=True)
+        self.fc = nn.Linear(256, 1)  # 添加一个全连接层，将 RNN 输出映射到单个值
+
+    def forward(self, x):
+        h0 = torch.zeros(self.rnn.num_layers, x.size(0), self.rnn.hidden_size).to(x.device)
+        out, hn = self.rnn(x, h0)
+        out = out[:, -1, :]  # 取出最后一个时间步的输出
+        out = self.fc(out)  # 将 RNN 的输出映射到单个值
+        return out

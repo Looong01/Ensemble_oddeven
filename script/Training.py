@@ -71,14 +71,20 @@ def train_epoch_meta(epoch, model1, model2, model3, train_loader, optimizer,devi
         optimizer.zero_grad()
         feature1 = model1(img1)#select features
         feature2 = model1(img2)#select features
+                # Flatten the features
+        feature1 = feature1.view(feature1.size(0), -1)
+        feature2 = feature2.view(feature2.size(0), -1)
 
-        combine_features = torch.cat((feature1, feature2), dim=1)#to model 3
+        print(feature1.shape)
+        # combine_features = torch.cat((feature1, feature2), dim=1)#to model 3
 
 
         label_pred1 = model2(feature1).squeeze()
         label_pred2 = model2(feature2).squeeze()
 
-        label_pred3 = model3(combine_features).squeeze()
+        # label_pred3 = model3(combine_features).squeeze()
+        sequence_features = torch.stack((feature1, feature2), dim=1).to(device)
+        label_pred3 = model3(sequence_features).squeeze()
 
         #二分类损伤函数F.binary_cross_entropy_with_logits
         loss1 = F.binary_cross_entropy_with_logits(label_pred1, img1_label.float())
@@ -122,15 +128,19 @@ def val_epoch_meta(model1, model2, model3, val_loader, device):
         with torch.no_grad():
             feature1 = model1(img1)#select features
             feature2 = model1(img2)#select features
+                    # Flatten the features
+            feature1 = feature1.view(feature1.size(0), -1)
+            feature2 = feature2.view(feature2.size(0), -1)
 
-            combine_features = torch.cat((feature1, feature2), dim=1)#to model 3
+            #combine_features = torch.cat((feature1, feature2), dim=1)#to model 3
 
 
             label_pred1 = model2(feature1).squeeze()
             label_pred2 = model2(feature2).squeeze()
 
-            label_pred3 = model3(combine_features).squeeze()
-
+            # label_pred3 = model3(combine_features).squeeze()
+            sequence_features = torch.stack((feature1, feature2), dim=1).to(device)
+            label_pred3 = model3(sequence_features).squeeze()
             #二分类损伤函数F.binary_cross_entropy_with_logits
             loss1 = F.binary_cross_entropy_with_logits(label_pred1, img1_label.float())
             loss2 = F.binary_cross_entropy_with_logits(label_pred2, img2_label.float())
